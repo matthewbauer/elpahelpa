@@ -41,7 +41,7 @@ Automated Emacs updates
 
 These are automated Emacs updates, generated with emacs2nix. Source
 currently pulled are ELPA, MELPA, and Org. This pull request should be
-created automatically by @elpahelpa. If there is any issue, please
+created automatically by @EmacsBot. If there is any issue, please
 file it at https://github.com/matthewbauer/elpahelpa.
 
 EOF
