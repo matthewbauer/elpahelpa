@@ -1,14 +1,18 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -p gitAndTools.hub gitAndTools.git -i bash
 
+git config --global hub.protocol https
+
 if ! [ -d nixpkgs ]; then
     hub clone nixpkgs
     (cd nixpkgs;
-     git remote add upstream https://github.com/NixOS/nixpkgs;
-     git fetch upstream)
+     git remote add upstream https://github.com/NixOS/nixpkgs)
 fi
 
-(cd nixpkgs; git fetch upstream master; git reset --hard upstream/master)
+(cd nixpkgs;
+ git fetch upstream master;
+ git reset --hard upstream/master;
+ git checkout -B emacs-updates)
 
 if ! [ -d emacs2nix ]; then
     git clone https://github.com/matthewbauer/emacs2nix
@@ -44,14 +48,14 @@ git add pkgs/applications/editors/emacs-modes/melpa-stable-generated.nix
 git commit -m "melpa-stable-packages $(date -Idate)"
 git add pkgs/applications/editors/emacs-modes/org-generated.nix
 git commit -m "org-packages $(date -Idate)"
-git push --set-upstream origin master --force
+git push --set-upstream origin emacs-updates --force
 hub pull-request -F - <<EOF
 Automated Emacs updates
 
-These are automated Emacs updates, generated with emacs2nix. Source
-currently pulled are ELPA, MELPA, and Org. This pull request should be
-created automatically by @EmacsBot. If there is any issue, please
-file it at https://github.com/matthewbauer/elpahelpa.
+These are automated Emacs updates, generated with emacs2nix through a
+Travis cron job. Sources currently pulled are ELPA, MELPA, and Org. If
+there is any issue, please file it at
+https://github.com/matthewbauer/elpahelpa.
 
 EOF
 popd
