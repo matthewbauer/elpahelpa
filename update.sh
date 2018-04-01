@@ -3,14 +3,16 @@
 
 if ! [ -d nixpkgs ]; then
     hub clone nixpkgs
-    (cd nixpkgs; git remote add upstream https://github.com/NixOS/nixpkgs)
+    (cd nixpkgs;
+     git remote add upstream https://github.com/NixOS/nixpkgs;
+     git fetch upstream)
 fi
 
-(cd nixpkgs; git fetch upstream/master; git reset --hard upstream/master)
+(cd nixpkgs; git fetch upstream master; git reset --hard upstream/master)
 
 if ! [ -d emacs2nix ]; then
     git clone https://github.com/matthewbauer/emacs2nix
-    (cd emacs2nix; git submodule update --init)
+    (cd emacs2nix; rm -rf nixpkgs; ln -s ../nixpkgs .)
 fi
 
 if ! [ -d melpa ]; then
@@ -19,13 +21,21 @@ else
     (cd melpa; git pull origin master)
 fi
 
-cd emacs2nix
-./elpa-packages.sh -o ../nixpkgs/pkgs/applications/editors/emacs-modes/elpa-generated.nix
-./melpa-packages.sh --melpa melpa -o ../nixpkgs/pkgs/applications/editors/emacs-modes/melpa-generated.nix
-./melpa-stable-packages.sh --melpa melpa -o ../nixpkgs/pkgs/applications/editors/emacs-modes/melpa-stable-generated.nix
-./org-packages.sh -o ../nixpkgs/pkgs/applications/editors/emacs-modes/org-generated.nix
+pushd emacs2nix
+./elpa-packages.sh \
+    -o ../nixpkgs/pkgs/applications/editors/emacs-modes/elpa-generated.nix
+./org-packages.sh \
+    -o ../nixpkgs/pkgs/applications/editors/emacs-modes/org-generated.nix
+./melpa-packages.sh \
+    --melpa ../melpa \
+    -o ../nixpkgs/pkgs/applications/editors/emacs-modes/melpa-generated.nix
+./melpa-stable-packages.sh \
+    --melpa ../melpa \
+    -o \
+    ../nixpkgs/pkgs/applications/editors/emacs-modes/melpa-stable-generated.nix
+popd
 
-cd ../nixpkgs
+pushd nixpkgs
 git add pkgs/applications/editors/emacs-modes/elpa-generated.nix
 git commit -m "elpa-packages $(date -Idate)"
 git add pkgs/applications/editors/emacs-modes/melpa-generated.nix
@@ -34,9 +44,8 @@ git add pkgs/applications/editors/emacs-modes/melpa-stable-generated.nix
 git commit -m "melpa-stable-packages $(date -Idate)"
 git add pkgs/applications/editors/emacs-modes/org-generated.nix
 git commit -m "org-packages $(date -Idate)"
-
 git push --set-upstream origin master --force
-hub pull-request <<EOF
+hub pull-request -F - <<EOF
 Automated Emacs updates
 
 These are automated Emacs updates, generated with emacs2nix. Source
@@ -45,3 +54,4 @@ created automatically by @EmacsBot. If there is any issue, please
 file it at https://github.com/matthewbauer/elpahelpa.
 
 EOF
+popd
