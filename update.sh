@@ -1,17 +1,18 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -p gitAndTools.hub gitAndTools.git -i bash
+#! nix-shell -i bash -p gitAndTools.hub gitAndTools.git
 
 git config --global hub.protocol https
 
 if ! [ -d nixpkgs ]; then
     hub clone nixpkgs
     (cd nixpkgs;
-     git remote add upstream https://github.com/NixOS/nixpkgs)
+     git remote add upstream https://github.com/NixOS/nixpkgs;
+     git remote add nixpkgs-channels https://github.com/NixOS/nixpkgs-channels)
 fi
 
 (cd nixpkgs;
- git fetch upstream master;
- git reset --hard upstream/master;
+ git fetch nixpkgs-channels nixpkgs-unstable;
+ git reset --hard nixpkgs-channels/nixpkgs-unstable;
  git checkout -B emacs-updates)
 
 if ! [ -d emacs2nix ]; then
